@@ -1665,7 +1665,8 @@ bool CTFItemSchema::BInitSchema( KeyValues *pKVRawDefinition, CUtlVector<CUtlStr
 		{
 			m_vecClassUsabilityStrings.AddToTail( gs_PlayerClassData[i].m_pchName );
 		}
-		Assert( m_vecClassUsabilityStrings.Size() == LOADOUT_COUNT );
+		// Civilian took the slot the trailing "Invalid" entry used to fill, so the table has one more than LOADOUT_COUNT
+		Assert( m_vecClassUsabilityStrings.Size() == LOADOUT_COUNT + 1 );
 	
 		InitializeStringTable( &g_szLoadoutStrings[0],				ARRAYSIZE(g_szLoadoutStrings),				&m_vecClassLoadoutStrings );
 		Assert( m_vecClassLoadoutStrings.Size() <= CLASS_LOADOUT_POSITION_COUNT );

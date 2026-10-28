@@ -3334,6 +3334,10 @@ void CTFPlayer::InitialSpawn( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::UpdateOnRemove( void )
 {
+	// Stop any voice line or taunt scenes still playing, since bots (and summoned robots) can be kicked mid-line
+	RemoveActorFromScriptedScenes( this, false );
+	ClearSceneEvents( NULL, true );
+
 	BaseClass::UpdateOnRemove();
 
 #if !defined(NO_STEAM)

@@ -166,11 +166,21 @@ private:
 
 			if ( TFGameRules() )
 			{
-				pMapDef = GetItemSchema()->GetMasterMapDefByIndex( TFGameRules()->GetNextMapVoteOption( nIndex ) );
+				// The panel lays out before a vote starts, while the options are still unset
+				MapDefIndex_t nMapIndex = TFGameRules()->GetNextMapVoteOption( nIndex );
+				if ( nMapIndex == 0 )
+					return;
+
+				pMapDef = GetItemSchema()->GetMasterMapDefByIndex( nMapIndex );
 			}
 			else
 			{
-				pMapDef = GetItemSchema()->GetMasterMapDefByIndex( RandomInt( 1, GetItemSchema()->GetMapCount() - 1 ) );
+				// Pick from the list itself, since the mod's map def indices have gaps
+				const CUtlVector< MapDef_t* > &vecMaps = GetItemSchema()->GetMasterMapsList();
+				if ( vecMaps.IsEmpty() )
+					return;
+
+				pMapDef = vecMaps[ RandomInt( 0, vecMaps.Count() - 1 ) ];
 			}
 		
 			Assert( pMapDef );

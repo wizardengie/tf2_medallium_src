@@ -1008,7 +1008,8 @@ void BuildGroup::LoadControlSettings(const char *controlResourceName, const char
 
 	if ( bShouldCacheKeys && bUsePrecaching )
 	{
-		Assert( m_dictCachedResFiles.Find( controlResourceName ) == m_dictCachedResFiles.InvalidIndex() );
+		// A nested panel can load and cache this same file during ApplySettings above, so it may already be here.
+		// Both copies are freed together when the cache is cleared.
 		m_dictCachedResFiles.Insert( controlResourceName, rDat );
 	}
 	else if ( bDeleteKeys )

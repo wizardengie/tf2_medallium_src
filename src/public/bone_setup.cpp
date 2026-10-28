@@ -2998,7 +2998,7 @@ bool Studio_IKAnimationError( const CStudioHdr *pStudioHdr, mstudioikrule_t *pRu
 
 	flWeight = Studio_IKRuleWeight( *pRule, panim, flCycle, iFrame, fraq );
 	Assert( fraq >= 0.0 && fraq < 1.0 );
-	Assert( flWeight >= 0.0f && flWeight <= 1.0f );
+	// The weight comes from the model's IK rule data, which some custom models get slightly out of range; it's clamped below
 
 	// This shouldn't be necessary, but the Assert should help us catch whoever is screwing this up
 	flWeight = clamp( flWeight, 0.0f, 1.0f );

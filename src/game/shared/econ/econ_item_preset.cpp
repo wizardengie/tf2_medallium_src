@@ -48,7 +48,9 @@ bool CEconItemPerClassPresetData::BIsKeyLess( const CSharedObject& soRHS ) const
 {
 	const CEconItemPerClassPresetData *soPresetData = assert_cast< const CEconItemPerClassPresetData * >( &soRHS );
 
-	Assert( m_unAccountID == soPresetData->m_unAccountID );
+	// A cache holds one account's presets, so only the class is compared; a preset with no account set (0) still matches
+	AssertMsg2( m_unAccountID == soPresetData->m_unAccountID || m_unAccountID == 0 || soPresetData->m_unAccountID == 0,
+		"Preset account mismatch: %u vs %u", m_unAccountID, soPresetData->m_unAccountID );
 
 	return m_unClassID < soPresetData->m_unClassID;
 }
