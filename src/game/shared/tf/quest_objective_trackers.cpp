@@ -64,7 +64,8 @@ CBaseQuestObjectiveTracker::CBaseQuestObjectiveTracker( const QuestObjectiveInst
 
     KeyValues* pKVConditions = pDef->GetConditionsKeyValues();
     if (!pKVConditions) {
-        AssertMsg(false, "Missing conditions KeyValues for objective def %d", pDef->GetDefIndex());
+        // Contracts in a real TF2 inventory can name objectives the mod's quest data doesn't define, so just skip them
+        DevWarning("Missing conditions KeyValues for objective def %d\n", pDef->GetDefIndex());
         return;
     }
 

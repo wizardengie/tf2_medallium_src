@@ -418,7 +418,8 @@ bool CQuestDefinition::BPostDataLoaded( CUtlVector<CUtlString> *pVecErrors )
 	{
 		const char *pszAssociatedOperation = m_msgData.operation().c_str();
 		m_pOperation = GetItemSchema()->GetOperationByName( pszAssociatedOperation );
-		Assert( m_pOperation != NULL );
+		// The mod's schema has no operations, so stock quests can't find theirs
+		Assert( m_pOperation != NULL || GetItemSchema()->GetOperationDefinitions().Count() == 0 );
 	}
 
 	bool bAllItemsValid = true;

@@ -241,7 +241,8 @@ bool CQuestMapNodeDefinition::BPostDataLoaded( CUtlVector<CUtlString> *pVecError
 	{
 		const char *pszAssociatedOperation = m_msgData.associated_operation().c_str();
 		m_pAssociatedOperationDef = GetItemSchema()->GetOperationByName( pszAssociatedOperation );
-		Assert( m_pAssociatedOperationDef != NULL );
+		// The mod's schema has no operations, so stock map nodes can't find theirs
+		Assert( m_pAssociatedOperationDef != NULL || GetItemSchema()->GetOperationDefinitions().Count() == 0 );
 	}
 
 	EvaluateLinks();

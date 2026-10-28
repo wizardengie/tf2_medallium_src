@@ -74,7 +74,8 @@ $Configuration "Debug"
 		$WholeProgramOptimization
 
 		// Preprocessor
-		$PreprocessorDefinitions			"$BASE;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)"
+		// Valve's prebuilt libs (gcsdk_sdk, tier2, ...) are release builds, so Debug has to share their STL layout or std::string breaks across them
+		$PreprocessorDefinitions			"$BASE;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)"
 		$IgnoreStandardIncludePath
 		$GeneratePreprocessedFile
 		$KeepComments

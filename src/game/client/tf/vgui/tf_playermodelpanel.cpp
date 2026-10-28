@@ -186,7 +186,8 @@ void CTFPlayerModelPanel::ApplySettings( KeyValues *inResourceData )
 			m_customClassData.AddToTail( data );
 		}
 
-		Assert( m_customClassData.Count() == TF_LAST_NORMAL_CLASS );
+		// The stock TF2 .res files stop at the Engineer, so the Civilian falls back to the default camera
+		Assert( m_customClassData.Count() == TF_CLASS_CIVILIAN || m_customClassData.Count() == TF_LAST_NORMAL_CLASS );
 	}
 
 	// always allow particle for this panel

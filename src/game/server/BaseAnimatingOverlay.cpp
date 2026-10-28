@@ -219,7 +219,10 @@ void CBaseAnimatingOverlay::VerifyOrder( void )
 		if (m_AnimOverlay[ i ].m_nOrder < MAX_OVERLAYS)
 		{
 			j = m_AnimOverlay[ i ].m_nOrder;
+#if !defined( TF_DLL )
+			// TF's gesture slots set m_nOrder to their slot index directly, so they can share an order with allocated layers
 			Assert( layer[j] == MAX_OVERLAYS );
+#endif
 			layer[j] = i;
 			if (j > maxOrder)
 				maxOrder = j;
