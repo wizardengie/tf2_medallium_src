@@ -26,14 +26,8 @@ $Project
 			$Configuration "Release" { $ExcludedFromBuild "Yes" }
 		}
 		
+		// Debug links the release protobuf too, since Debug uses _ITERATOR_DEBUG_LEVEL=0 to match Valve's prebuilt release libs
 		$File "$SRCDIR\thirdparty\protobuf-2.6.1\bin\win64\2015\staticcrt\release\libprotobuf.lib" [$WIN64]
-		{
-			$Configuration "Debug" 	{ $ExcludedFromBuild "Yes" }
-		}
-		$File "$SRCDIR\thirdparty\protobuf-2.6.1\bin\win64\2015\staticcrt\debug\libprotobuf.lib" [$WIN64]
-		{
-			$Configuration "Release" { $ExcludedFromBuild "Yes" }
-		}
 	}
 }
 
