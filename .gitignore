@@ -507,3 +507,7 @@ FodyWeavers.xsd
 
 # Local copy of the tf2_medallium game data (its own repo) used for debugging
 game/tf2_medallium/
+
+# Files the engine writes when the mod is run from game/
+game/steam_appid.txt
+game/platform/config/
