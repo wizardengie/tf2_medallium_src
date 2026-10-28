@@ -504,3 +504,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Local copy of the tf2_medallium game data (its own repo) used for debugging
+game/tf2_medallium/
