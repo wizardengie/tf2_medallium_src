@@ -1137,12 +1137,14 @@ void CTFPlayerInventory::EquipLocal(uint64 ulItemID, equipped_class_t unClass, e
 	if (ulItemID < 100000)
 	{
 		int count = TFInventoryManager()->GetModItemCount();
-		CEconItemView* pItem;
+		// stays NULL unless the item is already in the mod inventory, so it gets added below
+		CEconItemView* pItem = NULL;
 		for (int i = 0; i < count; i++)
 		{
-			pItem = TFInventoryManager()->GetModItem(i);
-			if (pItem && pItem->GetItemDefIndex() == ulItemID)
+			CEconItemView* pModItem = TFInventoryManager()->GetModItem(i);
+			if (pModItem && pModItem->GetItemDefIndex() == ulItemID)
 			{
+				pItem = pModItem;
 				pItem->GetSOCData()->Equip(unClass, unSlot);
 				break;
 			}
