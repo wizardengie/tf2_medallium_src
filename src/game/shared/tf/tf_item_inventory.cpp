@@ -1027,8 +1027,9 @@ void CTFPlayerInventory::LoadLocalLoadout()
 				if (iPreset == m_ActivePreset[iClass]) {
 					m_LoadoutItems[iClass][iSlot] = uItemId;
 
+					// items with no inventory behind them have no SOC data
 					CEconItemView *pItem = GetInventoryItemByItemID(uItemId);
-					if (pItem) {
+					if (pItem && pItem->GetSOCData()) {
 						pItem->GetSOCData()->Equip(iClass, iSlot);
 					}
 				}
@@ -1111,6 +1112,7 @@ void CTFPlayerInventory::EquipLocal(uint64 ulItemID, equipped_class_t unClass, e
 	// We will never get those messages, so we do everything locally.
 
 	// Unequip whatever was previously in the slot.
+	// (Items with no inventory behind them have no SOC data, so check for it.)
 	itemid_t ulPreviousItem = m_LoadoutItems[unClass][unSlot];
 	if (ulPreviousItem != 0 && ulPreviousItem < 100000)
 	{
@@ -1118,18 +1120,18 @@ void CTFPlayerInventory::EquipLocal(uint64 ulItemID, equipped_class_t unClass, e
 		for (int i = 0; i < count; i++)
 		{
 			CEconItemView* pItem = TFInventoryManager()->GetModItem(i);
-			if (pItem && pItem->GetItemDefIndex() == ulPreviousItem)
+			if (pItem && pItem->GetItemDefIndex() == ulPreviousItem && pItem->GetSOCData())
 				pItem->GetSOCData()->UnequipFromClass(unClass);
 		}
 		CEconItemView* pPreviousItem = GetInventoryItemByItemID(ulPreviousItem);
-		if (pPreviousItem) {
+		if (pPreviousItem && pPreviousItem->GetSOCData()) {
 			pPreviousItem->GetSOCData()->UnequipFromClass(unClass);
 		}
 	}
 	else
 	{
 		CEconItemView* pPreviousItem = GetInventoryItemByItemID(ulPreviousItem);
-		if (pPreviousItem)
+		if (pPreviousItem && pPreviousItem->GetSOCData())
 			pPreviousItem->GetSOCData()->UnequipFromClass(unClass);
 	}
 
@@ -1145,21 +1147,22 @@ void CTFPlayerInventory::EquipLocal(uint64 ulItemID, equipped_class_t unClass, e
 			if (pModItem && pModItem->GetItemDefIndex() == ulItemID)
 			{
 				pItem = pModItem;
-				pItem->GetSOCData()->Equip(unClass, unSlot);
+				if (pItem->GetSOCData())
+					pItem->GetSOCData()->Equip(unClass, unSlot);
 				break;
 			}
 		}
 		if (!pItem)
 		{
 			pItem = TFInventoryManager()->AddModItem(ulItemID);
-			if (pItem && pItem->GetItemDefIndex() == ulItemID)
+			if (pItem && pItem->GetItemDefIndex() == ulItemID && pItem->GetSOCData())
 				pItem->GetSOCData()->Equip(unClass, unSlot);
 		}
 	}
 	else
 	{
 		CEconItemView* pItem = GetInventoryItemByItemID(ulItemID);
-		if (pItem)
+		if (pItem && pItem->GetSOCData())
 			pItem->GetSOCData()->Equip(unClass, unSlot);
 	}
 
