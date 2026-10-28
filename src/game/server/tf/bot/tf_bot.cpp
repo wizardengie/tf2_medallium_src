@@ -831,6 +831,7 @@ void CreateBotName( int iTeam, int iClassIndex, CTFBot::DifficultyType skill, ch
 
 //-----------------------------------------------------------------------------------------------------
 extern ConVar tf_mvm_defenders_team_size;
+extern ConVar mp_teams_unbalance_limit;
 CON_COMMAND_F( tf_bot_add, "Add a bot.", FCVAR_GAMEDLL )
 {
 	// Listenserver host or rcon access only!
@@ -954,6 +955,25 @@ CON_COMMAND_F( tf_bot_add, "Add a bot.", FCVAR_GAMEDLL )
 
 			pBot->HandleCommand_JoinTeam( teamname );
 
+			// A refused join leaves the bot in spectator, where the quota manager would later
+			// put it on whatever team it picks - remove it and say why instead.
+			// (Arena queues bots in spectator on purpose.)
+			if ( pBot->GetTeamNumber() != TF_TEAM_RED && pBot->GetTeamNumber() != TF_TEAM_BLUE && !TFGameRules()->IsInArenaMode() )
+			{
+				if ( iTeam != TEAM_UNASSIGNED && mp_teams_unbalance_limit.GetInt() > 0 )
+				{
+					Warning( "tf_bot_add: %s is full under mp_teams_unbalance_limit %d, added %d of %d bots. Set mp_teams_unbalance_limit 0 to put more bots on one team.\n",
+							 teamname, mp_teams_unbalance_limit.GetInt(), iNumAdded, botCount );
+				}
+				else
+				{
+					Warning( "tf_bot_add: a bot couldn't join a team, added %d of %d bots.\n", iNumAdded, botCount );
+				}
+
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d\n", pBot->GetUserID() ) );
+				break;
+			}
+
 			pBot->SetDifficulty( skill );
 
 			// if no class is set, auto-select one
@@ -968,6 +988,12 @@ CON_COMMAND_F( tf_bot_add, "Add a bot.", FCVAR_GAMEDLL )
 			}
 
 			++iNumAdded;
+		}
+		else
+		{
+			Warning( "tf_bot_add: the server is full (maxplayers %d), added %d of %d bots. Engineer robot squads use player slots too.\n",
+					 gpGlobals->maxClients, iNumAdded, botCount );
+			break;
 		}
 	}
 

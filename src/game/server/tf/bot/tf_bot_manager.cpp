@@ -506,6 +506,14 @@ void CTFBotManager::MaintainBotQuota()
 				{
 					// the join was refused - wait a while rather than renaming this bot every think
 					m_flNextPeriodicThink = gpGlobals->curtime + 5.0f;
+
+					static float s_flNextRefusedWarning = 0.0f;
+					if ( gpGlobals->curtime >= s_flNextRefusedWarning || s_flNextRefusedWarning > gpGlobals->curtime + 60.0f )
+					{
+						s_flNextRefusedWarning = gpGlobals->curtime + 60.0f;
+						Warning( "Bot quota: a bot couldn't join %s. To put more bots on one team, set mp_teams_unbalance_limit 0.\n",
+								 iQuotaTeam == TF_TEAM_RED ? "RED" : iQuotaTeam == TF_TEAM_BLUE ? "BLU" : "a team" );
+					}
 					return;
 				}
 
