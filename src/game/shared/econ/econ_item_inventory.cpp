@@ -1673,10 +1673,6 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 	if ( steamIDOwner != m_OwnerID )
 		return;
 
-	#ifdef _DEBUG
-		Msg("CPlayerInventory::SOCacheSubscribed\n");
-	#endif
-
 	// Clear our old inventory
 	m_aInventoryItems.Purge();
 
@@ -1702,6 +1698,10 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 	}
 
 	m_bGotItemsFromSteam = true;
+
+	#ifdef _DEBUG
+		Msg( "CPlayerInventory::SOCacheSubscribed (%d items)\n", m_aInventoryItems.Count() );
+	#endif
 
 #ifdef CLIENT_DLL
 	if ( InventoryManager()->GetLocalInventory() == this )
