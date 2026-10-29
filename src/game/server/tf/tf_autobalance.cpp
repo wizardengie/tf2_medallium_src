@@ -153,7 +153,8 @@ bool CTFAutobalance::AreTeamsUnbalanced()
 
 		for ( CTeam *pTeam = GetGlobalTeam( i ); pTeam != NULL; pTeam = GetGlobalTeam( ++i ) )
 		{
-			int iNumPlayers = pTeam->GetNumPlayers();
+			// summoned robots don't count, or a team with a squad out would have its humans moved
+			int iNumPlayers = TFGameRules()->GetTeamNumPlayersForBalance( i );
 
 			if ( iNumPlayers < iLeastPlayers )
 			{
@@ -361,7 +362,7 @@ bool CTFAutobalance::FindCandidates()
 	CTeam *pTeam = GetGlobalTeam( m_iHeaviestTeam );
 	if ( pTeam )
 	{
-		nMinToFind = ( int ) ( pTeam->GetNumPlayers() * 0.4f ); // 40% of the team
+		nMinToFind = ( int ) ( TFGameRules()->GetTeamNumPlayersForBalance( m_iHeaviestTeam ) * 0.4f ); // 40% of the team
 	}
 
 	int nTotal = Max( ( m_nNeeded * 2 ), nMinToFind );

@@ -2403,7 +2403,9 @@ void CBoneSetup::AccumulatePose(
 	Vector		pos2[MAXSTUDIOBONES];
 	QuaternionAligned	q2[MAXSTUDIOBONES];
 
-	Assert( flWeight >= 0.0f && flWeight <= 1.0f );
+	// Layer weights can land slightly outside 0..1 (blended gestures, custom models); that's clamped below.
+	// Only a weight that isn't a number at all means something is broken.
+	Assert( IsFinite( flWeight ) );
 	// This shouldn't be necessary, but the Assert should help us catch whoever is screwing this up
 	flWeight = clamp( flWeight, 0.0f, 1.0f );
 

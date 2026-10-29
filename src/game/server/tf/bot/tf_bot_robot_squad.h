@@ -32,6 +32,7 @@ struct RobotSquadLoadoutDef_t
 	int m_nOrderMask;								// bit per ETFRobotSquadOrder this loadout suits, 0 for none in particular
 	CUtlString m_model;								// replaces the member's model while carrying this loadout
 	CTFBot::EventChangeAttributes_t m_attributes;	// items and attributes added on top of the member's own
+	CTFBot::RobotAI_t m_ai;							// AI settings that override the member's own
 };
 
 //----------------------------------------------------------------------------
@@ -62,6 +63,7 @@ struct RobotSquadMemberDef_t
 	CUtlString m_model;				// custom robot model, otherwise the stock MvM robot
 	CUtlString m_undeadModel;		// model during Halloween / Full Moon, otherwise the zombie look
 	CTFBot::EventChangeAttributes_t m_attributes;
+	CTFBot::RobotAI_t m_ai;			// Action, AimAt, MeleeWhenClose, etc
 	CCopyableUtlVector< const RobotSquadLoadoutDef_t * > m_loadouts;	// owned by CTFRobotSquadTemplates
 };
 

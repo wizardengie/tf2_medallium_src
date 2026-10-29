@@ -52,6 +52,7 @@ class IRestore;
 class C_BaseAnimating;
 class C_AI_BaseNPC;
 struct EmitSound_t;
+struct StartSoundParams_t;
 class C_RecipientFilter;
 class CTakeDamageInfo;
 class C_BaseCombatCharacter;

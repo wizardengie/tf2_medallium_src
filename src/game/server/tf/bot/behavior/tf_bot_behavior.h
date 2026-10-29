@@ -58,7 +58,7 @@ private:
 
 	bool IsImmediateThreat( const CBaseCombatCharacter *subject, const CKnownEntity *threat ) const;
 	const CKnownEntity *SelectCloserThreat( CTFBot *me, const CKnownEntity *threat1, const CKnownEntity *threat2 ) const;
-	const CKnownEntity *GetHealerOfThreat( const CKnownEntity *threat ) const;
+	const CKnownEntity *GetHealerOfThreat( CTFBot *me, const CKnownEntity *threat ) const;
 
 	const CKnownEntity *SelectMoreDangerousThreatInternal( const INextBot *me, 
 														   const CBaseCombatCharacter *subject,

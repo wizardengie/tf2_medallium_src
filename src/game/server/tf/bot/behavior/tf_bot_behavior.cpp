@@ -423,6 +423,12 @@ EventDesiredResult< CTFBot > CTFBotMainAction::OnInjured( CTFBot *me, const CTak
 	// notice the gunfire - needed for sentry guns, which don't go through the player OnWeaponFired() system
 	me->GetVisionInterface()->AddKnownEntity( subject );
 
+	// summoned robots turn on whoever is hurting them
+	if ( !obj )
+	{
+		me->NoteRobotAttacker( ToTFPlayer( info.GetAttacker() ) );
+	}
+
 	if ( info.GetInflictor() && info.GetInflictor()->GetTeamNumber() != me->GetTeamNumber() )
 	{
 		CObjectSentrygun *sentrygun = dynamic_cast< CObjectSentrygun * >( info.GetInflictor() );
@@ -740,6 +746,26 @@ EventDesiredResult< CTFBot > CTFBotMainAction::OnOtherKilled( CTFBot *me, CBaseC
 Vector CTFBotMainAction::SelectTargetPoint( const INextBot *meBot, const CBaseCombatCharacter *subject ) const
 {
 	CTFBot *me = (CTFBot *)meBot->GetEntity();
+
+	// summoned robots can be told where to aim their bullets and melee swings (projectiles keep their own aim)
+	if ( me->IsSummonedRobot() && subject && subject->IsPlayer() )
+	{
+		const CTFBot::RobotAI_t &ai = me->GetRobotAI();
+		CTFWeaponBase *myWeapon = me->m_Shared.GetActiveTFWeapon();
+
+		if ( ( ai.m_aimAt >= 0 || ai.m_hasAimOffset ) && myWeapon && ( myWeapon->IsMeleeWeapon() || me->IsHitScanWeapon( myWeapon ) ) )
+		{
+			Vector aimSpot;
+			switch( ai.m_aimAt )
+			{
+			case CTFBot::ROBOT_AI_AIM_HEAD:	aimSpot = subject->EyePosition();		break;
+			case CTFBot::ROBOT_AI_AIM_FEET:	aimSpot = subject->GetAbsOrigin();		break;
+			default:						aimSpot = subject->WorldSpaceCenter();	break;
+			}
+
+			return aimSpot + ai.m_aimOffset;
+		}
+	}
 
 	if ( subject )
 	{
@@ -1104,7 +1130,9 @@ const CKnownEntity *CTFBotMainAction::SelectCloserThreat( CTFBot *me, const CKno
 //---------------------------------------------------------------------------------------------
 // If the given threat is being healed by a Medic, return the Medic, otherwise just
 // return the threat.
-const CKnownEntity *CTFBotMainAction::GetHealerOfThreat( const CKnownEntity *threat ) const
+// (Takes the bot rather than using GetActor(), which is NULL if threats are compared
+// before this action has started, e.g. right after a robot squad order resets the behavior.)
+const CKnownEntity *CTFBotMainAction::GetHealerOfThreat( CTFBot *me, const CKnownEntity *threat ) const
 {
 	if ( !threat || !threat->GetEntity() )
 		return NULL;
@@ -1119,7 +1147,7 @@ const CKnownEntity *CTFBotMainAction::GetHealerOfThreat( const CKnownEntity *thr
 
 			if ( playerHealer )
 			{
-				const CKnownEntity *knownHealer = GetActor()->GetVisionInterface()->GetKnown( playerHealer );
+				const CKnownEntity *knownHealer = me->GetVisionInterface()->GetKnown( playerHealer );
 
 				if ( knownHealer && knownHealer->IsVisibleInFOVNow() )
 				{
@@ -1144,6 +1172,20 @@ const CKnownEntity *CTFBotMainAction::SelectMoreDangerousThreat( const INextBot 
 
 	// determine the actual threat
 	const CKnownEntity *threat = SelectMoreDangerousThreatInternal( me, subject, threat1, threat2 );
+
+	// summoned robots turn on whoever is hurting them, unless a sentry has them in its sights
+	if ( me->IsSummonedRobot() && !( threat && threat->GetEntity() && threat->GetEntity()->IsBaseObject() ) )
+	{
+		CTFPlayer *pRevengeTarget = me->GetRobotRevengeTarget();
+		if ( pRevengeTarget )
+		{
+			if ( threat1 && threat1->GetEntity() == pRevengeTarget && threat1->IsVisibleRecently() )
+				return threat1;
+
+			if ( threat2 && threat2->GetEntity() == pRevengeTarget && threat2->IsVisibleRecently() )
+				return threat2;
+		}
+	}
 
 	if ( me->IsDifficulty( CTFBot::EASY ) )
 	{
@@ -1186,7 +1228,7 @@ const CKnownEntity *CTFBotMainAction::SelectMoreDangerousThreat( const INextBot 
     }
 
  	// smarter bots first aim at the Medic healing our dangerous target
-	return GetHealerOfThreat( threat );
+	return GetHealerOfThreat( me, threat );
 }
 
 
@@ -1766,7 +1808,8 @@ QueryResultType	CTFBotMainAction::ShouldRetreat( const INextBot *bot ) const
 		return ANSWER_NO;
 
 	// We are a very cocky bot, we will not retreat.
-	if ( me->m_flCockiness >= 0.70f )
+	// (Not summoned robots - kills and a squad Medic's healing would make them fearless within seconds.)
+	if ( me->m_flCockiness >= 0.70f && !me->IsSummonedRobot() )
         return ANSWER_NO;
 
 	// retreat if stunned

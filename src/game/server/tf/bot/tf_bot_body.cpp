@@ -17,6 +17,12 @@ float CTFBotBody::GetHeadAimTrackingInterval( void ) const
 {
 	CTFBot *me = (CTFBot *)GetBot();
 
+	// summoned robots can have their own aim tracking
+	if ( me->IsSummonedRobot() && me->GetRobotAI().m_aimTrackingInterval >= 0.0f )
+	{
+		return me->GetRobotAI().m_aimTrackingInterval;
+	}
+
 	// Don't let Spies in MvM mode aim too precisely
 	if ( TFGameRules()->IsMannVsMachineMode() &&
 		 me->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS &&

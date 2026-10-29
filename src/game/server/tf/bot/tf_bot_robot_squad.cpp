@@ -416,6 +416,86 @@ static bool IsIgnoredPopfileField( const char *name )
 
 
 //----------------------------------------------------------------------------
+// AI keys a TFBot or Loadout can set. Names follow the popfile extensions some
+// community servers use, so their robots paste in. Returns true if it was one.
+static bool ParseRobotAIField( CTFBot::RobotAI_t &ai, KeyValues *pData )
+{
+	const char *name = pData->GetName();
+	const char *value = pData->GetString();
+
+	if ( !V_stricmp( name, "Action" ) )
+	{
+		if ( !V_stricmp( value, "Mobber" ) )
+		{
+			ai.m_action = CTFBot::ROBOT_AI_ACTION_MOBBER;
+		}
+		else if ( !V_stricmp( value, "Default" ) || !V_stricmp( value, "Push" ) )
+		{
+			ai.m_action = CTFBot::ROBOT_AI_ACTION_DEFAULT;
+		}
+		else
+		{
+			Warning( "Robot squads: Unsupported Action '%s' (Mobber or Default) - keeping the default\n", value );
+		}
+	}
+	else if ( !V_stricmp( name, "MoveBehindEnemy" ) )
+	{
+		ai.m_moveBehindEnemy = pData->GetBool() ? 1 : 0;
+	}
+	else if ( !V_stricmp( name, "DesiredAttackRange" ) )
+	{
+		ai.m_desiredAttackRange = MAX( 0.0f, pData->GetFloat() );
+	}
+	else if ( !V_stricmp( name, "MeleeWhenClose" ) )
+	{
+		ai.m_meleeWhenClose = MAX( 0.0f, pData->GetFloat() );
+	}
+	else if ( !V_stricmp( name, "AimAt" ) )
+	{
+		if ( !V_stricmp( value, "Head" ) )
+		{
+			ai.m_aimAt = CTFBot::ROBOT_AI_AIM_HEAD;
+		}
+		else if ( !V_stricmp( value, "Body" ) )
+		{
+			ai.m_aimAt = CTFBot::ROBOT_AI_AIM_BODY;
+		}
+		else if ( !V_stricmp( value, "Feet" ) )
+		{
+			ai.m_aimAt = CTFBot::ROBOT_AI_AIM_FEET;
+		}
+		else
+		{
+			Warning( "Robot squads: Unknown AimAt '%s' (Head, Body, or Feet)\n", value );
+		}
+	}
+	else if ( !V_stricmp( name, "AimOffset" ) )
+	{
+		Vector offset;
+		if ( sscanf( value, "%f %f %f", &offset.x, &offset.y, &offset.z ) == 3 )
+		{
+			ai.m_aimOffset = offset;
+			ai.m_hasAimOffset = true;
+		}
+		else
+		{
+			Warning( "Robot squads: AimOffset '%s' should be \"x y z\"\n", value );
+		}
+	}
+	else if ( !V_stricmp( name, "AimTrackingInterval" ) )
+	{
+		ai.m_aimTrackingInterval = MAX( 0.0f, pData->GetFloat() );
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
+}
+
+
+//----------------------------------------------------------------------------
 bool CTFRobotSquadTemplates::ParseMember( KeyValues *pMemberKV, KeyValues *pTemplatesKV, RobotSquadMemberDef_t &member, int nDepth )
 {
 	if ( nDepth > ROBOT_SQUAD_MAX_TEMPLATE_DEPTH )
@@ -502,6 +582,10 @@ bool CTFRobotSquadTemplates::ParseMember( KeyValues *pMemberKV, KeyValues *pTemp
 		else if ( !V_stricmp( name, "UndeadModel" ) )
 		{
 			member.m_undeadModel = value;
+		}
+		else if ( ParseRobotAIField( member.m_ai, pData ) )
+		{
+			// Action, AimAt, MeleeWhenClose, etc
 		}
 		else if ( ParseDynamicAttributes( member.m_attributes, pData ) )
 		{
@@ -603,6 +687,10 @@ const RobotSquadLoadoutDef_t *CTFRobotSquadTemplates::ParseLoadout( KeyValues *p
 		else if ( !V_stricmp( name, "Model" ) || !V_stricmp( name, "UseCustomModel" ) )
 		{
 			pLoadout->m_model = value;
+		}
+		else if ( ParseRobotAIField( pLoadout->m_ai, pData ) )
+		{
+			// Action, AimAt, MeleeWhenClose, etc
 		}
 		else if ( ParseDynamicAttributes( pLoadout->m_attributes, pData ) )
 		{
@@ -1754,6 +1842,13 @@ void CTFRobotSquad::ApplyMember( CTFBot *pBot, const RobotSquadMemberDef_t &def,
 	pBot->SetRobotFactory( pFactory );
 	pBot->SetRobotSquadOrder( m_nOrder );
 	pBot->SetSummonedType( nSummonedType );
+
+	CTFBot::RobotAI_t ai = def.m_ai;
+	if ( pLoadout )
+	{
+		ai.MergeFrom( pLoadout->m_ai );
+	}
+	pBot->SetRobotAI( ai );
 
 	pBot->RemovePlayerAttributes( false );
 
