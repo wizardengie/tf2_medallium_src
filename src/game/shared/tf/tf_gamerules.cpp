@@ -14297,7 +14297,8 @@ void CTFGameRules::Arena_ClientDisconnect( const char *playername )
 		if ( pTeamHeavy == NULL || pTeamLight == NULL )
 			return;
 
-		int iPlayersNeeded = pTeamHeavy->GetNumPlayers() - pTeamLight->GetNumPlayers();
+		// counted the same way AreTeamsUnbalanced() does, without summoned robots
+		int iPlayersNeeded = GetTeamNumPlayersForBalance( iHeavy ) - GetTeamNumPlayersForBalance( iLight );
 
 		if ( m_hArenaPlayerQueue.Count() == 0 )
 			return;
