@@ -79,7 +79,7 @@ ConVar tf_bot_give_items_killstreak_rarity( "tf_bot_give_items_killstreak_rarity
 ConVar tf_bot_give_items_killstreak_professional_rarity( "tf_bot_give_items_killstreak_professional_rarity", "4", FCVAR_GAMEDLL, "Higher = rarer Professional / Specialized Killstreaks." );
 
 // Bot Chat Commands
-ConVar tf_bot_chat_allow( "tf_bot_chat_allow", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "When set to 1, bots will send things in chat depending on the context." );
+ConVar tf_bot_chat_allow( "tf_bot_chat_allow", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "When set to 1, bots will send things in chat depending on the context." );
 ConVar tf_bot_chat_allow_mvmrobots("tf_bot_chat_allow_mvmrobots", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "When set to 1, robots in MVM will use chat.");
 ConVar tf_bot_chat_chance( "tf_bot_chat_chance", "0.30", FCVAR_REPLICATED, "The percent of chance that a bot will send a chat message (0.30 = 30%). Cannot go below 0.05 (5%) and cannot go above 1.0 (100%.)" );
 ConVar tf_bot_chat_chance_bybotcount( "tf_bot_chat_chance_bybotcount", "1", FCVAR_REPLICATED, "When set to 1, the chance a bot can send a chat message scales down the more bots there are in a map (does not count MVM robots)." );
