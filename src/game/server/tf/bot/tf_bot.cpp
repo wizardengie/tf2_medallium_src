@@ -1900,6 +1900,7 @@ CTFBot::CTFBot()
 	m_hRobotFactory = NULL;
 	m_nRobotSquadOrder = TF_ROBOT_SQUAD_ORDER_ATTACK;
 	m_bRobotKickPending = false;
+	m_hRobotRevengeTarget = NULL;
 
 	m_myControlPoint = NULL;
 
@@ -2006,6 +2007,7 @@ void CTFBot::Spawn()
         ? RandomFloat( 0.10f, 0.90f )
         : 0.0f;
     m_hatedPlayers.RemoveAll();
+    m_hRobotRevengeTarget = NULL;
     m_hLastKiller = NULL;
     m_nConsecutiveDeathsFromLastKiller = 0;
     m_insultTimer.Invalidate();
@@ -3125,6 +3127,49 @@ void CTFBot::RemoveSummonedRobot( void )
 
 
 //-----------------------------------------------------------------------------------------------------
+// How long a summoned robot stays after whoever last hurt it
+#define ROBOT_REVENGE_MEMORY_TIME	4.0f
+
+// How long before a summoned robot will switch to a different attacker
+#define ROBOT_RETARGET_LOCKOUT_TIME	3.0f
+
+void CTFBot::NoteRobotAttacker( CTFPlayer *pAttacker )
+{
+	if ( !IsSummonedRobot() || !pAttacker || pAttacker == this || !pAttacker->IsAlive() || pAttacker->GetTeamNumber() == GetTeamNumber() )
+		return;
+
+	if ( pAttacker == m_hRobotRevengeTarget )
+	{
+		// still after them
+		m_robotRevengeTimer.Start();
+		return;
+	}
+
+	// don't flip-flop between attackers while the last one is still on us
+	if ( GetRobotRevengeTarget() && !m_robotRetargetLockout.IsElapsed() )
+		return;
+
+	m_hRobotRevengeTarget = pAttacker;
+	m_robotRevengeTimer.Start();
+	m_robotRetargetLockout.Start( ROBOT_RETARGET_LOCKOUT_TIME );
+}
+
+
+//-----------------------------------------------------------------------------------------------------
+CTFPlayer *CTFBot::GetRobotRevengeTarget( void ) const
+{
+	CTFPlayer *pTarget = m_hRobotRevengeTarget;
+	if ( !pTarget || !pTarget->IsAlive() || pTarget->GetTeamNumber() == GetTeamNumber() )
+		return NULL;
+
+	if ( !m_robotRevengeTimer.HasStarted() || m_robotRevengeTimer.IsGreaterThen( ROBOT_REVENGE_MEMORY_TIME ) )
+		return NULL;
+
+	return pTarget;
+}
+
+
+//-----------------------------------------------------------------------------------------------------
 bool CTFBot::IsReadyToSpawn( void )
 {
 	// summoned robots respawn together, when their squad says so
@@ -3145,6 +3190,10 @@ bool CTFBot::IsAllowedToPickUpFlag( void ) const
 
 	// only the leader of a squad can pick up the flag
 	if ( IsInASquad() && !GetSquad()->IsLeader( const_cast< CTFBot * >( this ) ) )
+		return false;
+
+	// summoned mobbers are busy hunting
+	if ( IsRobotMobber() )
 		return false;
 
 	// mission bots can't pick up the flag
@@ -4879,6 +4928,12 @@ float CTFBot::GetDesiredAttackRange( void ) const
 	if ( !myWeapon )
 		return 0.0f;
 
+	// summoned robots can be told how close to get (not with a melee weapon, which has to reach)
+	if ( IsSummonedRobot() && m_robotAI.m_desiredAttackRange >= 0.0f && !myWeapon->IsMeleeWeapon() )
+	{
+		return m_robotAI.m_desiredAttackRange;
+	}
+
 	if ( myWeapon->IsWeapon( TF_WEAPON_KNIFE ) )
 	{
 		// get very close and stab
@@ -4961,6 +5016,18 @@ bool CTFBot::EquipRequiredWeapon( void )
 // Equip the best weapon we have to attack the given threat
 void CTFBot::EquipBestWeaponForThreat( const CKnownEntity *threat )
 {
+	// summoned robots can be told to pull out their melee weapon when an enemy gets close (unless an item is in use)
+	if ( IsSummonedRobot() && m_robotAI.m_meleeWhenClose > 0.0f && m_requiredWeaponStack.Count() == 0 &&
+		 threat && threat->GetEntity() && threat->IsVisibleRecently() && IsRangeLessThan( threat->GetLastKnownPosition(), m_robotAI.m_meleeWhenClose ) )
+	{
+		CBaseCombatWeapon *melee = Weapon_GetSlot( TF_WPN_TYPE_MELEE );
+		if ( melee )
+		{
+			Weapon_Switch( melee );
+			return;
+		}
+	}
+
 	if ( EquipRequiredWeapon() )
 		return;
 

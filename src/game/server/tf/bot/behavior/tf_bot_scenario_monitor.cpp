@@ -45,6 +45,7 @@
 #include "bot/behavior/tf_bot_seek_and_destroy.h"
 #include "bot/behavior/tf_bot_taunt.h"
 #include "bot/behavior/tf_bot_escort.h"
+#include "bot/behavior/tf_bot_mobber.h"
 #include "bot/behavior/scenario/capture_the_flag/tf_bot_fetch_flag.h"
 #include "bot/behavior/scenario/capture_the_flag/tf_bot_deliver_flag.h"
 
@@ -120,7 +121,11 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 			break;
 		}
 
-		// ATTACK, or nothing left to escort - play the objective
+		// ATTACK, or nothing left to escort - mobbers hunt enemies, the rest play the objective
+		if ( me->IsRobotMobber() )
+		{
+			return new CTFBotMobber;
+		}
 	}
 
 	switch( me->GetMission() )

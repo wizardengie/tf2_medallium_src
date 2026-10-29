@@ -425,6 +425,68 @@ public:
 	int GetRobotSquadOrder( void ) const					{ return m_nRobotSquadOrder; }
 	void RemoveSummonedRobot( void );						// kick this summoned robot from the server
 
+	// Engineer robot squads - per-robot AI settings from the squad file. Unset fields
+	// (< 0) keep the stock behavior, and a loadout's set fields override its member's.
+	enum RobotAIAction_t
+	{
+		ROBOT_AI_ACTION_DEFAULT = 0,	// play the objective
+		ROBOT_AI_ACTION_MOBBER,			// ignore the objective and hunt down enemies
+	};
+
+	enum RobotAIAimAt_t
+	{
+		ROBOT_AI_AIM_HEAD = 0,
+		ROBOT_AI_AIM_BODY,
+		ROBOT_AI_AIM_FEET,
+	};
+
+	struct RobotAI_t
+	{
+		RobotAI_t()
+		{
+			m_action = -1;
+			m_moveBehindEnemy = -1;
+			m_desiredAttackRange = -1.0f;
+			m_meleeWhenClose = -1.0f;
+			m_aimAt = -1;
+			m_aimOffset = vec3_origin;
+			m_hasAimOffset = false;
+			m_aimTrackingInterval = -1.0f;
+		}
+
+		void MergeFrom( const RobotAI_t &other )
+		{
+			if ( other.m_action >= 0 )					m_action = other.m_action;
+			if ( other.m_moveBehindEnemy >= 0 )			m_moveBehindEnemy = other.m_moveBehindEnemy;
+			if ( other.m_desiredAttackRange >= 0.0f )	m_desiredAttackRange = other.m_desiredAttackRange;
+			if ( other.m_meleeWhenClose >= 0.0f )		m_meleeWhenClose = other.m_meleeWhenClose;
+			if ( other.m_aimAt >= 0 )					m_aimAt = other.m_aimAt;
+			if ( other.m_aimTrackingInterval >= 0.0f )	m_aimTrackingInterval = other.m_aimTrackingInterval;
+
+			if ( other.m_hasAimOffset )
+			{
+				m_aimOffset = other.m_aimOffset;
+				m_hasAimOffset = true;
+			}
+		}
+
+		int m_action;					// RobotAIAction_t
+		int m_moveBehindEnemy;			// mobbers circle around to their victim's back
+		float m_desiredAttackRange;		// how close to get before fighting
+		float m_meleeWhenClose;			// switch to melee when the enemy is this close
+		int m_aimAt;					// RobotAIAimAt_t, for hitscan weapons
+		Vector m_aimOffset;				// added to wherever we aim
+		bool m_hasAimOffset;
+		float m_aimTrackingInterval;	// seconds between aim updates - lower is sharper
+	};
+
+	void SetRobotAI( const RobotAI_t &ai )					{ m_robotAI = ai; }
+	const RobotAI_t &GetRobotAI( void ) const				{ return m_robotAI; }
+	bool IsRobotMobber( void ) const						{ return IsSummonedRobot() && m_robotAI.m_action == ROBOT_AI_ACTION_MOBBER; }
+
+	void NoteRobotAttacker( CTFPlayer *pAttacker );			// summoned robots turn on whoever is hurting them
+	CTFPlayer *GetRobotRevengeTarget( void ) const;			// who hurt us just now, if we should still be after them
+
 	void JoinSquad( CTFBotSquad *squad );					// become a member of the given squad
 	void LeaveSquad( void );								// leave our current squad
 	void DeleteSquad( void );
@@ -669,6 +731,10 @@ private:
 	CHandle< CBaseEntity > m_hRobotFactory;				// teleporter exit we (re)spawn from
 	int m_nRobotSquadOrder;								// ETFRobotSquadOrder
 	bool m_bRobotKickPending;
+	RobotAI_t m_robotAI;
+	CHandle< CTFPlayer > m_hRobotRevengeTarget;			// the enemy who hurt us most recently
+	IntervalTimer m_robotRevengeTimer;					// since they last hurt us
+	CountdownTimer m_robotRetargetLockout;				// keeps us from flip-flopping between attackers
 
 	CTFBotSquad *m_squad;
 	bool m_didReselectClass;
