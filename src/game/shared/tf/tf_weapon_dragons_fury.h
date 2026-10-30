@@ -57,6 +57,7 @@ public:
 
 #ifdef GAME_DLL
 	virtual float GetInitialAfterburnDuration() const OVERRIDE { return 0.f; }
+	virtual void	UpdateOnRemove( void ) OVERRIDE;
 	void RefundAmmo( int nAmmo );
 #else
 	virtual void	OnDataChanged( DataUpdateType_t updateType ) OVERRIDE;
