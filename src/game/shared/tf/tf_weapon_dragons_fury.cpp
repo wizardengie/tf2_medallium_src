@@ -293,6 +293,14 @@ float CTFWeaponFlameBall::GetMeterMultiplier() const
 
 #ifdef GAME_DLL
 
+void CTFWeaponFlameBall::UpdateOnRemove( void )
+{
+	// The weapon can be deleted mid-recharge, and the sound patch would outlive it.
+	StopPressureSound();
+
+	BaseClass::UpdateOnRemove();
+}
+
 void CTFWeaponFlameBall::RefundAmmo( int nAmmo )
 {
 	if ( HasFullCharge() )

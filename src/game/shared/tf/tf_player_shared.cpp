@@ -7121,9 +7121,6 @@ void CTFPlayerShared::OnAddStealthed( void )
 #ifdef CLIENT_DLL
 	if ( bFirstPrediction )
 	{
-		// Remove water balloon effect if it on player
-		m_pOuter->ParticleProp()->StopParticlesNamed( "balloontoss_drip", true );
-
 		m_pOuter->UpdateSpyStateChange();
 		m_pOuter->UpdateKillStreakEffects( GetStreak( kTFStreak_Kills ) );
 	}
@@ -8265,7 +8262,8 @@ void CTFPlayerShared::Disguise( int nTeam, int nClass, CTFPlayer* pDesiredTarget
 	int nRealTeam = m_pOuter->GetTeamNumber();
 	int nRealClass = m_pOuter->GetPlayerClass()->GetClassIndex();
 
-	Assert ( ( nClass >= TF_CLASS_SCOUT ) && ( nClass <= TF_CLASS_ENGINEER ) );
+	// Spies can disguise as any real class, including the Civilian
+	Assert ( IsValidTFPlayerClass( nClass ) );
 
 	// we're not a spy
 	if ( nRealClass != TF_CLASS_SPY )
